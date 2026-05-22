@@ -16,7 +16,7 @@ function verifySignature(rawBody, signature) {
 
 // POST /webhook/lemonsqueezy
 // Raw body is required — registered with express.raw() in server.js
-router.post('/lemonsqueezy', async (req, res) => {
+router.post('/', async (req, res) => {
   const signature = req.headers['x-signature'];
   if (!signature) return res.status(401).json({ error: 'Missing signature' });
 

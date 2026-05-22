@@ -31,25 +31,33 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  const eventName = payload.meta?.event_name;
-  const attrs     = payload.data?.attributes;
+  const eventName  = payload.meta?.event_name;
+  const attrs      = payload.data?.attributes;
   const customData = payload.meta?.custom_data;
+
+  console.log('[webhook] event_name:', eventName);
+  console.log('[webhook] custom_data:', JSON.stringify(customData));
+  console.log('[webhook] data.attributes.status:', attrs?.status);
 
   const userId = customData?.user_id;
   if (!userId) {
-    // No user_id in custom_data — nothing to update
+    console.log('[webhook] skipping — no user_id in custom_data');
     return res.status(200).json({ ok: true });
   }
 
   const statusMap = {
-    subscription_created:  handleActive,
-    subscription_updated:  handleUpdated,
+    subscription_created:   handleActive,
+    subscription_updated:   handleUpdated,
     subscription_cancelled: handleCancelled,
-    subscription_expired:  handleExpired,
+    subscription_expired:   handleExpired,
+    order_created:          handleActive,
   };
 
   const handler = statusMap[eventName];
-  if (!handler) return res.status(200).json({ ok: true, skipped: true });
+  if (!handler) {
+    console.log('[webhook] skipping — unhandled event:', eventName);
+    return res.status(200).json({ ok: true, skipped: true });
+  }
 
   try {
     await handler(userId, attrs);
